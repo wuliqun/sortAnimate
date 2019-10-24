@@ -366,6 +366,55 @@ export default {
     },
     generateIndexArr(start,end){
       return new Array(end - start + 1).fill('').map((item,index)=>index + start);
-    }
+    },
+    wrapArr(arr){
+      return arr.map((item, index) => {
+        return {
+          id: index + 1,
+          value: item,
+          className: "",
+          left: 0
+        };
+      });
+    },
+    addClass(indexs, className) {
+      for (let i of indexs) {
+        let name = this.sortArr[i].className.split(/\s+/);
+        if (!name.includes(className)) {
+          this.sortArr[i].className = [...name, className].join(" ");
+        }
+      }
+    },
+    addClassAsync(indexs, className) {
+      this.addClass(indexs, className);
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, this.delay);
+      });
+    },
+    removeClass(indexs, className) {
+      for (let i of indexs) {
+        let name = this.sortArr[i].className.split(/\s+/),
+          index = name.indexOf(className);
+        if (index !== -1) {
+          name.splice(index, 1);
+          this.sortArr[i].className = name.join(" ");
+        }
+      }
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, this.delay);
+      });
+    },
+    removeClassAsync(indexs, className) {
+      this.removeClass(indexs, className);
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve();
+        }, this.delay);
+      });
+    },
   }
 }

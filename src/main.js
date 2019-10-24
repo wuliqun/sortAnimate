@@ -3,6 +3,8 @@
 import Vue from 'vue'
 import App from './App'
 
+import sortMixin from './mixin/sortMixin';
+Vue.mixin(sortMixin);
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 
