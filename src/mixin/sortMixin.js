@@ -9,69 +9,118 @@ export default {
       }
     },
     // 冒泡
-    bubbleSort(arr) {
+    bubbleSort: function *(arr) {
       let len = arr.length,
         i, j;
       for (i = 0; i < len; i++) {
         for (j = 1; j < len - i; j++) {
+          yield ['active',[j-1,j]];
           if (arr[j] < arr[j - 1]) {
             this.swap(arr, j, j - 1);
+            yield ['swap',[j-1,j]];
+          }else{
+            yield ['deactive',[j-1,j]];
           }
         }
+        yield ['sorted',[len-i-1]];
       }
       return arr;
     },
     // 选择
-    selectSort(arr) {
+    selectSort: function *(arr) {
       let len = arr.length,
         i, j, minIndex, min;
       for (i = 0; i < len; i++) {
         min = arr[i];
         minIndex = i;
+        yield ['active',[i]];
         for (j = i + 1; j < len; j++) {
+          yield ['active',[j]];
           if (min > arr[j]) {
+            yield ['deactive',[minIndex]];
+            yield ['active',[j]];
             min = arr[j];
             minIndex = j;
+          }else{
+            yield ['deactive',[j]];
           }
         }
-        this.swap(arr, i, minIndex);
+        if(i !== minIndex){
+          this.swap(arr, i, minIndex);
+          yield ['swap',[i,minIndex]];
+        }else{
+          yield ['deactive',[i]];
+        }
+        yield ['sorted',[i]];
       }
       return arr;
     },
     // 插入
-    insertSort(arr) {
+    insertSort: function *(arr) {
       let len = arr.length,
         i, j, cur;
       for (i = 1; i < len; i++) {
+        yield ['down',[i]];
         cur = arr[i];
         j = i - 1;
+        yield('active',[j]);
         while (j >= 0 && arr[j] > cur) {
           arr[j + 1] = arr[j];
+          yield('active',[j]);
+          yield ['swap',[j,j+1]];
           j--;
         }
+        yield('deactive',[j]);
         arr[j + 1] = cur;
+        yield ['up',[j + 1]];
+        yield ['sorted',new Array(i+1).fill('').map((item,index)=>index)];
       }
       return arr;
     },
     // 希尔
-    shellSort(arr) {
+    shellSort: function * (arr) {
       let len = arr.length,
         gap = len,
         i,
         j,
-        cur;
-      while (gap) {
-        gap = gap >> 1;
+        cur,
+        tmp;
+      while (gap > 1) {
+        gap = gap >> 1;        
+        yield ['show', `gap = ${gap}`];
         for (i = gap; i < len; i++) {
+          tmp = [];
+          // 当前子数组
+          for(j = i;j >= 0;j-=gap){
+            tmp.push(j);            
+          }
+          if(gap === 1){
+            yield ['sorted',tmp];
+          }else{
+            yield ['shell',tmp];
+          }
           cur = arr[i];
+          yield ['down',[i]];
           j = i - gap;
+          yield ['active',[j]];
           while (j >= 0 && arr[j] > cur) {
+            yield ['active',[j]];
+            yield ['swap',[j,j+gap]];
             arr[j + gap] = arr[j];
             j -= gap;
           }
+          if(j >= 0){
+            yield ['deactive',[j]];
+          }
           arr[j + gap] = cur;
+          yield ['up',[j+gap]];
+          if(gap !== 1){
+            yield ['unshell',tmp];
+          }
         }
       }
+      yield ['unshow'];
+      return arr;
     },
     // 归并
     mergeSort(arr) {
@@ -120,36 +169,70 @@ export default {
       }
     },
     // 快速
-    quickSort(arr) {
+    quickSort: function *(arr) {
       let stack = [
         [0, arr.length - 1]
       ];
+      yield ['blur',this.generateIndexArr(0,arr.length-1)];
       let start, end, left, right, cur, tmp;
       while (stack.length) {
         [start, end] = stack.pop();
+        if(start === end){
+          yield ['sorted',[start]]
+        }
         if (end - start < 1) continue;
+        yield ['unblur',this.generateIndexArr(start,end)];
         cur = arr[start];
+        yield ['cur',[start]];
         left = start + 1;
         right = end;
-        while (left <= right) {
+        yield ['active',[left,right]];
+        while (left <= right) {          
           // 左侧大于 cur, 右侧小于 cur, 交换
           if (arr[left] > cur && arr[right] < cur) {
             this.swap(arr, left, right);
+            yield ['swap',[left,right]];
             left++;
             right--;
+            yield ['active',[left,right]];
           }
+          
           // 左侧小于 cur, 左指针右移
           while (arr[left] <= cur && left <= right) {
+            yield ['deactive',[left]];
             left++;
+            if(left <= end){
+              yield ['active',[left]];
+            }
           }
           // 右侧大于 cur, 右指针左移
           while (arr[right] >= cur && right >= left) {
+            yield ['deactive',[right]];
             right--;
+            if(right >= start){
+              yield ['active',[right]];
+            }
           }
         }
+        if(left <= end){
+          yield ['deactive',[left,right]];
+        }
         left--;
+        yield ['active',[left]];
         arr[start] = arr[left];
         arr[left] = cur;
+        yield ['uncur',[start]];
+        if(start !== left){
+          yield ['swap',[start,left]];
+        }
+        if(end - start === 1){
+          yield ['deactive',[start,end]];
+          yield ['sorted',[start,end]];
+        }else{
+          yield ['deactive',[left]];
+          yield ['sorted',[left]];
+        }
+        yield ['blur',this.generateIndexArr(start,end)];
         stack.push([start, left - 1]);
         stack.push([left + 1, end]);
       }
@@ -280,6 +363,9 @@ export default {
         }
       }
       return arr;
+    },
+    generateIndexArr(start,end){
+      return new Array(end - start + 1).fill('').map((item,index)=>index + start);
     }
   }
 }
