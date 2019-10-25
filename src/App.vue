@@ -18,7 +18,7 @@
         <div class="label">算法选择:</div>
         <div class="btns">
           <div class="btn-wrapper" v-for="(method,index) in sortMethods" :key="method.id">
-            <el-button type="primary" :plain="index !== methodIndex" :disabled="index > 5" @click="methodIndex = index">{{ method.name }}</el-button>
+            <el-button type="primary" :plain="index !== methodIndex" :disabled="index > 6" @click="methodIndex = index">{{ method.name }}</el-button>
           </div>
         </div>
       </div>
@@ -46,7 +46,7 @@ import "./style/reset.css";
 import sortMixin from "./mixin/sortMixin";
 import InPlaceComponent from './components/inPlaceSort';
 import MergeComponent from './components/mergeSort';
-const inPlaceSort = ['bubbleSort','selectSort','insertSort','shellSort','quickSort'];
+const inPlaceSort = ['bubbleSort','selectSort','insertSort','shellSort','quickSort','heapSort'];
 export default {
   name: "App",
   created() {
@@ -117,7 +117,8 @@ export default {
       methodIndex: 0, // 当前排序方法名
       delay: 300, //动画间隔
       show:false,
-      message:''
+      message:'',
+      current:null
     };
   },
   components: {
@@ -140,24 +141,16 @@ export default {
       // this.stop = false;
     },
     reset() {
-      this.stop = true;
-      let arr;
-      try {
-        arr = JSON.parse(this.arrString);
-      } catch (e) {
-        alert("数组格式有误,请重新输入");
-      }
-      this.arr = arr;
-      this.sortArr = this.wrapArr(arr);
-      setTimeout(() => {
-        this.stop = false;
-      }, 500);
+      this.current.stopSort();
     },
     startSort() {
       let funcName = this.sortMethods[this.methodIndex].funcName;
       if(inPlaceSort.indexOf(funcName) !== -1){
-        this.$refs.inplaceComponent.startSort(funcName);
+        this.current = this.$refs.inplaceComponent;
+      }else if(funcName === 'mergeSort'){
+        this.current = this.$refs.mergeComponent;        
       }
+      this.current.startSort(funcName);
     }
   },
   computed:{

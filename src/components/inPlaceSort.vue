@@ -47,11 +47,21 @@ export default {
       this.sortArr = this.wrapArr(arr);
       this.max = Math.max.apply(null,arr);
     },
+    stopSort(){
+      this.stop = true;
+      return new Promise((resolve)=>{
+        setTimeout(() => {
+          this.init(this.arr);
+          this.stop = false;
+          resolve();
+        }, 1000);
+      });
+    },
     async startSort(funcName){
       let sortGenerator = this[funcName](this.array);
       let res = sortGenerator.next(),
         value;
-      while (!res.done) {
+      while (!res.done && !this.stop) {
         value = res.value;
         switch (value[0]) {
           case "active":
@@ -100,6 +110,7 @@ export default {
         }
         res = sortGenerator.next();
       }
+      this.stop = false;
     },    
     // 交换动画
     swapAnimation(i, j) {
